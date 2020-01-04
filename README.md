@@ -1,6 +1,6 @@
 # aws-msk-kafka-connect-docker
 
-This repository is tracking some of my early learning and tests of [Amazon Managed Streaming for Kafka](https://aws.amazon.com/msk/) (Amazon MSK), and [Confluent's Kafka Connect](https://docs.confluent.io/current/connect/index.html) to produce or consume data from the cluster. 
+This repository is a work in process and is tracking some of my early learning and tests of [Amazon Managed Streaming for Kafka](https://aws.amazon.com/msk/) (Amazon MSK), and [Confluent's Kafka Connect](https://docs.confluent.io/current/connect/index.html) to produce or consume data from the cluster. 
 
 My vision, if time permits, is to have an easy-to-deploy project that creates: 
 
@@ -17,3 +17,4 @@ I recently disccovered the awesome, serverless AWS Lambda-powered load testing o
 
 `./msk-cluster` - contains AWS SAM template to deploy a new MSK cluster. You must configure the `deploy.sh` script to specify the subnet and security group configuration of your cluster. Optionally, review the `template.yml` for any other changes you may want to make, such as enforcing TLS encryption.
 
+`./kafka-connect` - contains the resources to build Confluent Kafka Connect stream publishers and consumers.
