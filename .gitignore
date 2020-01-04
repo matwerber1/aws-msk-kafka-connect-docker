@@ -1,0 +1,7 @@
+mydeploy.sh
+ignore/
+node_modules
+packaged.yaml
+.aws-sam
+confluent/examples
+build/

@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  aws-msk-learning
+
+Transform:
+- AWS::Serverless-2016-10-31
+
+Parameters: 
+  
+  MskSubnets: 
+    # Per AWS Docs, MSK subnets cannot be in us-east-1e: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-msk-cluster-brokernodegroupinfo.html
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: >-
+      Subnets in which to launch our MSK cluster. If region is us-east-1, this 
+      subnet *cannot* be in us-east-1e. Specify exactly two subnets if you are 
+      using one of the following Regions: South America (São Paulo), Canada (Central), 
+      or US West (N. California). For other Regions where Amazon MSK is available, 
+      you can specify either two or three subnets. The subnets that you specify must
+       be in distinct Availability Zones.
+
+  MskBrokerType: 
+    Type: String
+    Default: kafka.m5.large
+    AllowedValues: 
+      - kafka.m5.large
+      - kafka.m5.xlarge
+      - kafka.m5.2xlarge
+      - kafka.m5.4xlarge
+      - kafka.m5.12xlarge
+      - kafka.m5.24xlarge
+
+  MskSecurityGroups: 
+    Type: List<AWS::EC2::SecurityGroup::Id>
+
+  MskKafkaVersion:
+    Type: String
+    Default: 2.2.1
+    AllowedValues:
+      - 2.2.1
+      - 1.1.1
+
+  MskNumberOfBrokerNodes:
+    Type: Number
+    Default: 2
+
+Resources:
+
+  MskCluster: 
+    Type: AWS::MSK::Cluster
+    Properties: 
+      BrokerNodeGroupInfo: 
+        ClientSubnets: 
+          !Ref MskSubnets
+        InstanceType: 
+          !Ref MskBrokerType
+        SecurityGroups: 
+          !Ref MskSecurityGroups
+      ClusterName: !Sub "${AWS::StackName}-MskClusterTest"
+      EncryptionInfo:
+        EncryptionInTransit:
+          ClientBroker: TLS_PLAINTEXT                     # This allows TLS or plaintext, which may not be suitable for sensitive content
+      KafkaVersion: !Ref MskKafkaVersion
+      NumberOfBrokerNodes: !Ref MskNumberOfBrokerNodes
+      OpenMonitoring: 
+        Prometheus:
+          JmxExporter:
+            EnabledInBroker: true
+          NodeExporter:
+            EnabledInBroker: true
+
+Outputs:
+
+  MskClusterArn: 
+    Value: !Ref MskCluster
