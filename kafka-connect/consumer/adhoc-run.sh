@@ -11,10 +11,10 @@
 # This must match the CloudFormation stack name specified in the msk-cluster/deploy.sh script:
 STACK_NAME="aws-msk-learning"
 
+# Get MSK information:
 HOST_ADDRESS=$(curl 169.254.169.254/latest/meta-data/hostname)
 CLUSTER_ARN=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='MskClusterArn'].OutputValue" --output text)
 ZOOKEEPER_STRING=$(aws kafka describe-cluster --cluster-arn $CLUSTER_ARN | jq ' .ClusterInfo.ZookeeperConnectString ' --raw-output)
-
 # Depending on how you've configured your MSK cluster, it might have TLS and/or plaintext broker endpoints: 
 TLS_BROKERS=$(aws kafka get-bootstrap-brokers --region us-east-1 --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerStringTls' --raw-output)
 PLAINTEXT_BROKERS=$(aws kafka get-bootstrap-brokers --region us-east-1 --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerString' --raw-output)

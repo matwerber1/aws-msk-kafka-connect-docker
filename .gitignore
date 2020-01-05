@@ -5,3 +5,7 @@ packaged.yaml
 .aws-sam
 confluent/examples
 build/
+kafka_2.12*
+ssl/
+aws-msk-tutorial/producer.sh
+aws-msk-tutorial/consumer.sh
