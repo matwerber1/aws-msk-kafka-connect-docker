@@ -1,6 +1,6 @@
 # ./aws-msk-tutorial/
 
-This directory contains resources to help you quickly test the production and consumption of messages by (mostly) automating [Step 5 - Create a Topic](https://docs.aws.amazon.com/msk/latest/developerguide/create-topic) and [Step 6 - Produce and Consume Data](https://docs.aws.amazon.com/msk/latest/developerguide/produce-consume).
+This directory contains resources to help you quickly test the production and consumption of messages by (mostly) automating [Step 5 - Create a Topic](https://docs.aws.amazon.com/msk/latest/developerguide/create-topic) and [Step 6 - Produce and Consume Data](https://docs.aws.amazon.com/msk/latest/developerguide/produce-consume) in the [Amazon MSK Getting Started Guide](https://docs.aws.amazon.com/msk/latest/developerguide/getting-started.html).
 
 # Prerequisites
 
