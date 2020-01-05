@@ -13,8 +13,10 @@ My vision, if time permits, is to have an easy-to-deploy project that creates:
 I recently disccovered the awesome, serverless AWS Lambda-powered load testing offered by [Nordstrom's open source Serverless Artillery project](https://github.com/Nordstrom/serverless-artillery), so I might consider using this instead of #2, above... or maybe adding both options? 
 
 
-## Contents
+## Usage
 
-`./msk-cluster` - contains AWS SAM template to deploy a new MSK cluster. You must configure the `deploy.sh` script to specify the subnet and security group configuration of your cluster. Optionally, review the `template.yml` for any other changes you may want to make, such as enforcing TLS encryption.
+`msk-cluster-setup/` - contains AWS SAM template to deploy a new MSK cluster. You must configure the `deploy.sh` script to specify the subnet and security group configuration of your cluster. Optionally, review the `template.yml` for any other changes you may want to make, such as enforcing TLS encryption.
 
-`./kafka-connect` - contains the resources to build Confluent Kafka Connect stream publishers and consumers.
+`aws-msk-tutorial/` - contains scripts to automate the basic producer and consumer tests from the official [AWS MSK Getting Started Guide](https://docs.aws.amazon.com/msk/latest/developerguide/getting-started.html). These are simple tests where you type messages into a terminal that are then posted to a test topic in your cluster, and you can watch as they are received by a consumer script running in a separate terminal. 
+
+`kafka-connect/` - contains the resources to build Confluent Kafka Connect stream publishers and consumers as separate Docker images. The publisher uses Confluent's datagen connector to generate simulated streaming data, and the consumer uses Confluent's S3 Connector to consume and write messages to Amazon S3.
