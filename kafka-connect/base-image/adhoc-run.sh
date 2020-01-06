@@ -12,7 +12,7 @@
 STACK_NAME="aws-msk-learning"
 
 # Get MSK information:
-HOST_ADDRESS=$(curl 169.254.169.254/latest/meta-data/hostname)
+#HOST_ADDRESS=$(curl 169.254.169.254/latest/meta-data/hostname)
 CLUSTER_ARN=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='MskClusterArn'].OutputValue" --output text)
 ZOOKEEPER_STRING=$(aws kafka describe-cluster --cluster-arn $CLUSTER_ARN | jq ' .ClusterInfo.ZookeeperConnectString ' --raw-output)
 # Depending on how you've configured your MSK cluster, it might have TLS and/or plaintext broker endpoints: 
