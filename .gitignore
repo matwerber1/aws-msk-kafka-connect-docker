@@ -7,5 +7,5 @@ confluent/examples
 build/
 kafka_2.12*
 ssl/
-aws-msk-tutorial/producer.sh
-aws-msk-tutorial/consumer.sh
+producer.sh
+consumer.sh
