@@ -2,21 +2,14 @@
 
 This repository is a work in process and is tracking some of my early learning and tests of [Amazon Managed Streaming for Kafka](https://aws.amazon.com/msk/) (Amazon MSK), and [Confluent's Kafka Connect](https://docs.confluent.io/current/connect/index.html) to produce or consume data from the cluster. 
 
-My vision, if time permits, is to have an easy-to-deploy project that creates: 
-
-1. An Amazon MSK cluster
-
-2. A fleet of Kafka Connect containers on [AWS Fargate](https://aws.amazon.com/fargate/) to publish artificial load to the MSK cluster using the [Kafka Connect Datagen connector](https://github.com/confluentinc/kafka-connect-datagen). 
-
-3. A fleet of Kafka Connect containers on AWS Fargate that use [Amazon S3 Sink Connector for the Confluent Platform](https://docs.confluent.io/current/connect/kafka-connect-s3/index.html) to read from the stream and write the data to Amazon S3.
-
-I recently disccovered the awesome, serverless AWS Lambda-powered load testing offered by [Nordstrom's open source Serverless Artillery project](https://github.com/Nordstrom/serverless-artillery), so I might consider using this instead of #2, above... or maybe adding both options? 
-
-
 ## Usage
 
-`msk-cluster-setup/` - contains AWS SAM template to deploy a new MSK cluster. You must configure the `deploy.sh` script to specify the subnet and security group configuration of your cluster. Optionally, review the `template.yml` for any other changes you may want to make, such as enforcing TLS encryption.
+The repo is a bit disorganized right now, containing several parallel and related tracks. 
 
-`aws-msk-tutorial/` - contains scripts to automate the basic producer and consumer tests from the official [AWS MSK Getting Started Guide](https://docs.aws.amazon.com/msk/latest/developerguide/getting-started.html). These are simple tests where you type messages into a terminal that are then posted to a test topic in your cluster, and you can watch as they are received by a consumer script running in a separate terminal. 
+The folder structure is: 
 
-`kafka-connect/` - contains the resources to build Confluent Kafka Connect stream publishers and consumers as separate Docker images. The publisher uses Confluent's datagen connector to generate simulated streaming data, and the consumer uses Confluent's S3 Connector to consume and write messages to Amazon S3.
+* [msk-cluster-setup](./msk-cluster-setup/) - contains AWS SAM template to deploy a new MSK cluster. You must configure the `deploy.sh` script to specify the subnet and security group configuration of your cluster. Optionally, review the `template.yml` for any other changes you may want to make, such as enforcing TLS encryption.
+
+* [aws-msk-tutorial](./aws-msk-tutorial/) - contains scripts to automate the basic producer and consumer tests from the official [AWS MSK Getting Started Guide](https://docs.aws.amazon.com/msk/latest/developerguide/getting-started.html). These are simple tests where you type messages into a terminal that are then posted to a test topic in your cluster, and you can watch as they are received by a consumer script running in a separate terminal. 
+
+* [kafka-connect](./kafka-connect) - contains the resources to build dockerized Confluent Kafka Connect stream publishers and consumers. The publisher uses Confluent's datagen connector to generate simulated streaming data, and the consumer uses Confluent's S3 Connector to consume and write messages to Amazon S3.
