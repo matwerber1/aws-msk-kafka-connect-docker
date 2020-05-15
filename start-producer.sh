@@ -5,7 +5,7 @@
 #-------------------------------------------------------------------------------
 REGION="us-west-2"
 CLUSTER_ARN="arn:aws:kafka:us-west-2:544941453660:cluster/my-cluster/327fed8e-e90d-439d-8477-d31fc2ce7117-3"
-USE_TLS_BROKERS=1
+USE_TLS_BROKERS=0
 
 #-------------------------------------------------------------------------------
 # Only edit if you want to customize things:
