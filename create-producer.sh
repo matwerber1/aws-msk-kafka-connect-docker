@@ -1,11 +1,10 @@
 #!/bin/bash
 
 #-------------------------------------------------------------------------------
-# CONFIGURE THIS:
+# Load Configuration
 #-------------------------------------------------------------------------------
-REGION="us-west-2"
-CLUSTER_ARN="arn:aws:kafka:us-west-2:544941453660:cluster/my-cluster/327fed8e-e90d-439d-8477-d31fc2ce7117-3"
-USE_TLS_BROKERS=0
+
+. config/global.sh
 
 #-------------------------------------------------------------------------------
 # Only edit if you want to customize things:
@@ -58,42 +57,21 @@ chmod 777 $CURRENT_DIR/consumer.sh
 
 if [ $USE_TLS_BROKERS -eq 1 ]
 then
-docker run -it --rm --expose 8083 -p 8083:8083 \
-  --env=host \
-  -e CONNECT_ENABLED_PROTOCOLS=TLSv1.2,TLSv1.1,TLSv1 \
-  -e CONNECT_SECURITY_PROTOCOL=SSL \
-  -e CONNECT_SSL_TRUSTSTORE_LOCATION=/usr/lib/jvm/zulu-8-amd64/jre/lib/security/cacerts \
-  -e CONNECT_SSL_TRUSTSTORE_PASSWORD=changeit \
-  -e CONNECT_BOOTSTRAP_SERVERS="$BROKERS" \
-  -e CONNECT_REST_HOST_NAME="0.0.0.0" \
-  -e CONNECT_REST_PORT="8083" \
-  -e CONNECT_REST_ADVERTISED_HOST_NAME="localhost" \
-  -e CONNECT_REST_ADVERTISED_LISTENER="http" \
-  -e CONNECT_REST_ADVERTISED_PORT="8083" \
-  -e CONNECT_GROUP_ID="quickstart" \
-  -e CONNECT_CONFIG_STORAGE_TOPIC="quickstart-config" \
-  -e CONNECT_OFFSET_STORAGE_TOPIC="quickstart-offsets" \
-  -e CONNECT_STATUS_STORAGE_TOPIC="quickstart-status" \
-  -e CONNECT_KEY_CONVERTER="org.apache.kafka.connect.storage.StringConverter" \
-  -e CONNECT_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
-  -e CONNECT_INTERNAL_KEY_CONVERTER="org.apache.kafka.connect.storage.StringConverter" \
-  -e CONNECT_INTERNAL_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
-  -e CONNECT_QUICKSTART="Stock_Trades" \
-  -e CONNECT_PLUGIN_PATH="/usr/share/java,/usr/share/confluent-hub-components" \
-  cnfldemos/kafka-connect-datagen:0.1.7-5.3.1
+  # After we figure out how to do this with plaintext brokers, we'll come back to TLS...
+  echo "TLS brokers not yet supported, exiting."
 else
-docker run -it --rm --expose 8083 -p 8083:8083 \
+docker run -it --rm --expose $PRODUCER_PORT -p $PRODUCER_PORT:$PRODUCER_PORT \
   --env=host \
   -e CONNECT_BOOTSTRAP_SERVERS="$BROKERS" \
   -e CONNECT_REST_HOST_NAME="0.0.0.0" \
-  -e CONNECT_REST_PORT="8083" \
+  -e CONNECT_REST_PORT="$PRODUCER_PORT" \
   -e CONNECT_REST_ADVERTISED_HOST_NAME="localhost" \
   -e CONNECT_REST_ADVERTISED_LISTENER="http" \
-  -e CONNECT_REST_ADVERTISED_PORT="8083" \
-  -e CONNECT_GROUP_ID="quickstart" \
-  -e CONNECT_CONFIG_STORAGE_TOPIC="quickstart-config" \
-  -e CONNECT_OFFSET_STORAGE_TOPIC="quickstart-offsets" \
-  -e CONNECT_STATUS_STORAGE_TOPIC="quickstart-status" \
+  -e CONNECT_REST_ADVERTISED_PORT="$PRODUCER_PORT" \
+  -e CONNECT_GROUP_ID="$PRODUCER_TOPIC_PREFIX-group" \
+  -e CONNECT_CONFIG_STORAGE_TOPIC="$PRODUCER_TOPIC_PREFIX-config" \
+  -e CONNECT_OFFSET_STORAGE_TOPIC="$PRODUCER_TOPIC_PREFIX-offsets" \
+  -e CONNECT_STATUS_STORAGE_TOPIC="$PRODUCER_TOPIC_PREFIX-status" \
   -e CONNECT_KEY_CONVERTER="org.apache.kafka.connect.storage.StringConverter" \
   -e CONNECT_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
   -e CONNECT_INTERNAL_KEY_CONVERTER="org.apache.kafka.connect.storage.StringConverter" \
