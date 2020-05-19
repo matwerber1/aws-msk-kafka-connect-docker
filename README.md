@@ -113,4 +113,4 @@ You will need Java/JDK version >=1.8 to run Kafka Connect. You can install the o
 
 8. Again, Kafka Connect needs to be invoked via its REST API before it actually does anything. Run `./invoke-s3-sync.sh` to trigger the S3 Sync connector. 
 
-9. After a minute or so, you should see activity in the S3 Sync Connector's termiinal that shows successful writes to S3; you can navigate to your S3 bucket to confirm. 
+9. After a minute or so, you should see activity in the S3 Sync Connector's terminal that shows successful writes to S3; you can navigate to your S3 bucket to confirm. 

@@ -63,9 +63,6 @@ fi
 # Run our Kafka Connect demo container. Note - it takes a minute or two to finish setting up. 
 # Once its done, it listens on a local port and we need to curl a command to the listener to
 # tell it to start producing our demo data:
-# Run our Kafka Connect demo container. Note - it takes a minute or two to finish setting up. 
-# Once its done, it listens on a local port and we need to curl a command to the listener to
-# tell it to start producing our demo data:
 DIR=$(pwd)
 echo Starting Kafka Connect S3 Sync worker...
 docker run -it --rm \
