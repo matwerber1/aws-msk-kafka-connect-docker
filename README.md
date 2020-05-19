@@ -19,7 +19,7 @@ Draft complete... I think it works? :)
 ## 1. MSK Cluster
 You need to create an [Amazon Managed Streaming for Kafka (MSK)](https://aws.amazon.com/msk/) cluster in one of your AWS VPCs. 
 
-While you technically could create the cluster in a public subnet and connect to it over the internet, I always advice to launch resources in a private subnet when possible and then connect to them from either a bastion host, another EC2 instance, an [Amazon Cloud9 instance](https://aws.amazon.com/cloud9/) (easiest option, in my opinion), a VPN connection, or similar approach. 
+While you technically could create the cluster in a public subnet and connect to it over the internet, I would always advise to launch resources in a private subnet when possible and then connect to them from either a bastion host, another EC2 instance, an [Amazon Cloud9 instance](https://aws.amazon.com/cloud9/) (easiest option, in my opinion), a VPN connection, or similar approach. 
 
 When creating your MSK cluster, **create a three-node cluster**. MSK will allow you to create a two-node cluster, however, we will use a docker image of the kafka-connect-datagen ()[cnfldemos/kafka-connect-datagen](https://github.com/confluentinc/kafka-connect-datagen)), and this demo data connector requires 3+ nodes. You can use the smallest available node type, currently a **kafka.t3.small**, for your brokers. 
 
