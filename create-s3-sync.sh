@@ -4,37 +4,68 @@
 # Load Configuration
 #-------------------------------------------------------------------------------
 
+echo Loading config...
 . config/global.sh
 
 #-------------------------------------------------------------------------------
 # Only edit if you want to customize things:
 #-------------------------------------------------------------------------------
 
-ZOOKEEPER_STRING=$(aws kafka describe-cluster --cluster-arn $CLUSTER_ARN | jq ' .ClusterInfo.ZookeeperConnectString ' --raw-output)
-TLS_BROKERS=$(aws kafka get-bootstrap-brokers --region $REGION --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerStringTls' --raw-output)
-PLAINTEXT_BROKERS=$(aws kafka get-bootstrap-brokers --region $REGION --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerString' --raw-output)
+# Get Cluster Info
+echo Getting Amazon MSK broker addresses...
+TLS_BROKERS=$(aws kafka get-bootstrap-brokers --region $CLUSTER_REGION --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerStringTls' --raw-output)
+PLAINTEXT_BROKERS=$(aws kafka get-bootstrap-brokers --region $CLUSTER_REGION --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerString' --raw-output)
 
-if [ $USE_TLS_BROKERS -eq 1 ]
+# Configure appropriate settings based on whether you want to use SSL:
+if [ $USE_SSL -eq 1 ]
 then
+  echo Based on global config, TLS brokers will be used...
   BROKERS=$TLS_BROKERS
+  SECURITY_PROTOCOL=SSL
 else
+  echo Based on global config, plaintext brokers will be used...
   BROKERS=$PLAINTEXT_BROKERS
+  SECURITY_PROTOCOL=PLAINTEXT
 fi
+
+# The file below will contain the config parameters that we later use to invoke our Kafka Connect S3 Sync:
+echo 'Creating config/s3-sync.config...'
+cat <<EOT > config/s3-sync.config
+{
+  "name": "s3-sink-docker",
+  "config": {
+    "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+    "topics": "stock-trades",
+    "s3.region": "$S3_REGION",
+    "s3.bucket.name": "$S3_BUCKET_NAME",
+    "s3.part.size": 5242880,
+    "flush.size": 10000, 
+    "storage.class": "io.confluent.connect.s3.storage.S3Storage", 
+    "format.class": "io.confluent.connect.s3.format.json.JsonFormat", 
+    "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator", 
+    "partitioner.class": "io.confluent.connect.storage.partitioner.TimeBasedPartitioner",  
+    "schema.compatibility": "NONE", "partition.duration.ms": 2000, 
+    "path.format": "YYYY/M/d/h", 
+    "locale": "US", 
+    "timezone": "UTC", 
+    "rotate.schedule.interval.ms": 60000
+  }
+}
+EOT
 
 # Run our Kafka Connect demo container. Note - it takes a minute or two to finish setting up. 
 # Once its done, it listens on a local port and we need to curl a command to the listener to
 # tell it to start producing our demo data:
-
-if [ $USE_TLS_BROKERS -eq 1 ]
-then
-  # After we figure out how to do this with plaintext brokers, we'll come back to TLS...
-  echo "TLS brokers not yet supported, exiting."
-else
-docker run -it --rm --expose $PORT -p $SYNC_PORT:$SYNC_PORT \
+DIR=$(pwd)
+echo Starting Kafka Connect S3 Sync worker...
+docker run -it --rm \
+  -p $SYNC_PORT:$SYNC_PORT \
+  --expose $SYNC_PORT \
   --env=host \
+  -e CONNECT_SECURITY_PROTOCOL=$SECURITY_PROTOCOL \
   -e CONNECT_BOOTSTRAP_SERVERS="$BROKERS" \
   -e CONNECT_REST_HOST_NAME="0.0.0.0" \
-  -e CONNECT_REST_PORT="$PORT" \
+  -e CONNECT_REST_PORT="$SYNC_PORT" \
   -e CONNECT_REST_ADVERTISED_HOST_NAME="localhost" \
   -e CONNECT_REST_ADVERTISED_LISTENER="http" \
   -e CONNECT_REST_ADVERTISED_PORT="$SYNC_PORT" \
@@ -42,14 +73,13 @@ docker run -it --rm --expose $PORT -p $SYNC_PORT:$SYNC_PORT \
   -e CONNECT_CONFIG_STORAGE_TOPIC="$SYNC_TOPIC_PREFIX-config" \
   -e CONNECT_OFFSET_STORAGE_TOPIC="$SYNC_TOPIC_PREFIX-offsets" \
   -e CONNECT_STATUS_STORAGE_TOPIC="$SYNC_TOPIC_PREFIX-status" \
-  -e CONNECT_KEY_CONVERTER="io.confluent.connect.avro.AvroConverter" \
-  -e CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL="http://localhost:8081" \
-  -e CONNECT_VALUE_CONVERTER="io.confluent.connect.avro.AvroConverter" \
-  -e CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL="http://localhost:8081" \
+  -e CONNECT_KEY_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
+  -e CONNECT_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
+  -e CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE="false" \
+  -e CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE="false" \
+  -e CONNECT_INTERNAL_KEY_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
+  -e CONNECT_INTERNAL_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
+  -e HOME="/root" \
   -v ~/.aws/credentials:/root/.aws/credentials \
+  $( (( USE_SSL == 1 )) && printf %s "-e CONNECT_SSL_TRUSTSTORE_LOCATION=/app/truststore.jks -v $DIR/ssl/client.truststore.jks:/app/truststore.jks") \
   confluentinc/cp-kafka-connect:5.4.2
-fi
-
-#
-#  -e CONNECT_INTERNAL_KEY_CONVERTER="org.apache.kafka.connect.storage.StringConverter" \
-#-e CONNECT_INTERNAL_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \

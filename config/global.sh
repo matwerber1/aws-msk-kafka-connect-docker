@@ -1,12 +1,18 @@
 #!/bin/bash
 
-# EDIT TO MATCH YOUR CONFIG
-REGION="us-west-2"
-CLUSTER_ARN="arn:aws:kafka:us-west-2:544941453660:cluster/my-cluster/327fed8e-e90d-439d-8477-d31fc2ce7117-3"
-USE_TLS_BROKERS=0
+#----------------------------------
+# EDIT FOR YOUR AWS ENVIRONMENT
+#----------------------------------
+S3_REGION=YOUR_S3_BUCKET_REGION
+S3_BUCKET_NAME=YOUR_S3_BUCKET_NAME
+CLUSTER_REGION=_YOUR_MSK_CLUSTER_REGION
+CLUSTER_ARN=YOUR_MSK_CLUSTER_ARN
+USE_SSL=0
 
-# No need to change unless you want to:
+#----------------------------------
+# OPTIONALLY, EDIT BELOW
+#----------------------------------
 PRODUCER_PORT=8083
 SYNC_PORT=8084
-PRODUCER_TOPIC_PREFIX="stock-trades"
-SYNC_TOPIC_PREFIX="s3-sync"
+PRODUCER_TOPIC_PREFIX="producer-demo"
+SYNC_TOPIC_PREFIX="s3-sync-demo"

@@ -12,5 +12,5 @@
 curl \
   -X POST \
   -H "Content-Type: application/json" \
-  --data @config/stock-trade.config \
+  --data @config/producer.config \
   http://localhost:$PRODUCER_PORT/connectors

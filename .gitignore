@@ -9,3 +9,5 @@ kafka_2.12*
 ssl/
 producer.sh
 consumer.sh
+credentials
+my-global.sh

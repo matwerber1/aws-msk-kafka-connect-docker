@@ -4,63 +4,73 @@
 # Load Configuration
 #-------------------------------------------------------------------------------
 
+echo Loading config...
 . config/global.sh
 
 #-------------------------------------------------------------------------------
 # Only edit if you want to customize things:
 #-------------------------------------------------------------------------------
+
+# Get Cluster Info
+echo Getting Amazon MSK broker and ZooKeeper addresses...
 ZOOKEEPER_STRING=$(aws kafka describe-cluster --cluster-arn $CLUSTER_ARN | jq ' .ClusterInfo.ZookeeperConnectString ' --raw-output)
-TLS_BROKERS=$(aws kafka get-bootstrap-brokers --region $REGION --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerStringTls' --raw-output)
-PLAINTEXT_BROKERS=$(aws kafka get-bootstrap-brokers --region $REGION --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerString' --raw-output)
+TLS_BROKERS=$(aws kafka get-bootstrap-brokers --region $CLUSTER_REGION --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerStringTls' --raw-output)
+PLAINTEXT_BROKERS=$(aws kafka get-bootstrap-brokers --region $CLUSTER_REGION --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerString' --raw-output)
 
-if [ $USE_TLS_BROKERS -eq 1 ]
-then
-  BROKERS=$TLS_BROKERS
-else
-  BROKERS=$PLAINTEXT_BROKERS
-fi
-
-# We download Kafka project, which contains some helper scripts we will later use: 
+# Download the Apache Kafka project, which contains a helper script we will
+# use to create a topic to send our dummy data to later: 
 CURRENT_DIR=$(pwd)
 KAFKA_DIR=kafka_2.12-2.2.1
-echo Downloading Kafka...
 if [ ! -d $KAFKA_DIR ]; then
-    wget https://archive.apache.org/dist/kafka/2.2.1/kafka_2.12-2.2.1.tgz
-    tar -xzf kafka_2.12-2.2.1.tgz
+  echo Downloading Kafka...
+  get https://archive.apache.org/dist/kafka/2.2.1/kafka_2.12-2.2.1.tgz
+  tar -xzf kafka_2.12-2.2.1.tgz
 else
   echo Kafka already downloaded...
 fi
 
-# We create a topic that we will later publish to and consume messages from:
+# Create a topic for our dummy stock trade data:
 REPLICATION_FACTOR=2
-echo Creating test topic...
+echo Creating topic "stock-trades" for our dummy data...
 $KAFKA_DIR/bin/kafka-topics.sh --create \
   --zookeeper "$ZOOKEEPER_STRING" \
   --replication-factor $REPLICATION_FACTOR \
   --partitions 1 \
   --topic stock-trades
 
-# We generate a consumer.sh script below which will allow us to view messages
-# coming in to the topic (once we later start producing them):
-echo "Generating consumer.sh script that you can later use to view generated data..."
-cat <<EOT > $CURRENT_DIR/consumer.sh
+# Generate a 'consumer.sh' script we can later run to view data as it
+# is being produced in the terminal (allows us to make sure producer is working):
+echo "Generating run-consumer.sh which you can later use to read data from our test topic..."
+cat <<EOT > ./run-consumer.sh
 $KAFKA_DIR/bin/kafka-console-consumer.sh \
   --bootstrap-server $BROKERS \
   --topic stock-trades --from-beginning
 EOT
+chmod 777 $CURRENT_DIR/run-consumer.sh
 
-chmod 777 $CURRENT_DIR/consumer.sh
+# Configure appropriate settings based on whether you want to use SSL:
+if [ $USE_SSL -eq 1 ]
+then
+  echo Based on global config, TLS brokers will be used...
+  BROKERS=$TLS_BROKERS
+  SECURITY_PROTOCOL=SSL
+else
+  echo Based on global config, plaintext brokers will be used...
+  BROKERS=$PLAINTEXT_BROKERS
+  SECURITY_PROTOCOL=PLAINTEXT
+fi
 
 # Run our Kafka Connect demo container. Note - it takes a minute or two to finish setting up. 
 # Once its done, it listens on a local port and we need to curl a command to the listener to
 # tell it to start producing our demo data:
-
-if [ $USE_TLS_BROKERS -eq 1 ]
-then
-  # After we figure out how to do this with plaintext brokers, we'll come back to TLS...
-  echo "TLS brokers not yet supported, exiting."
-else
-docker run -it --rm --expose $PRODUCER_PORT -p $PRODUCER_PORT:$PRODUCER_PORT \
+# Run our Kafka Connect demo container. Note - it takes a minute or two to finish setting up. 
+# Once its done, it listens on a local port and we need to curl a command to the listener to
+# tell it to start producing our demo data:
+DIR=$(pwd)
+echo Starting Kafka Connect S3 Sync worker...
+docker run -it --rm \
+  -p $PRODUCER_PORT:$PRODUCER_PORT
+  --expose $PRODUCER_PORT \
   --env=host \
   -e CONNECT_BOOTSTRAP_SERVERS="$BROKERS" \
   -e CONNECT_REST_HOST_NAME="0.0.0.0" \
@@ -72,11 +82,12 @@ docker run -it --rm --expose $PRODUCER_PORT -p $PRODUCER_PORT:$PRODUCER_PORT \
   -e CONNECT_CONFIG_STORAGE_TOPIC="$PRODUCER_TOPIC_PREFIX-config" \
   -e CONNECT_OFFSET_STORAGE_TOPIC="$PRODUCER_TOPIC_PREFIX-offsets" \
   -e CONNECT_STATUS_STORAGE_TOPIC="$PRODUCER_TOPIC_PREFIX-status" \
-  -e CONNECT_KEY_CONVERTER="org.apache.kafka.connect.storage.StringConverter" \
+  -e CONNECT_KEY_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
   -e CONNECT_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
-  -e CONNECT_INTERNAL_KEY_CONVERTER="org.apache.kafka.connect.storage.StringConverter" \
+  -e CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE="false" \
+  -e CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE="false" \
+  -e CONNECT_INTERNAL_KEY_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
   -e CONNECT_INTERNAL_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
   -e CONNECT_QUICKSTART="Stock_Trades" \
   -e CONNECT_PLUGIN_PATH="/usr/share/java,/usr/share/confluent-hub-components" \
   cnfldemos/kafka-connect-datagen:0.1.7-5.3.1
-fi
