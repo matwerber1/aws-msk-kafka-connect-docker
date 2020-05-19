@@ -105,7 +105,7 @@ You will need Java/JDK version >=1.8 to run Kafka Connect. You can install the o
     [2020-05-15 21:13:33,884] INFO [Worker clientId=connect-1, groupId=stock-trades-group] Finished starting connectors and tasks (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
     ```
 
-5. The step above starts our Kafka Connect data producer, but no data is being produced yet. When Kafka Connect starts, it listens on a local REST interface for commands, such as starting or stopping a task. To start our data generation, run `./invoke_producer.sh`, which will curl a simple API command to your container and tell it to start sending messages to the `stock-trades` topic ini your MSK cluster. 
+5. The step above starts our Kafka Connect data producer, but no data is being produced yet. When Kafka Connect starts, it listens on a local REST interface for commands, such as starting or stopping a task. To start our data generation, run `./invoke_producer.sh`, which will curl a simple API command to your container and tell it to start sending messages to the `stock-trades` topic in your MSK cluster. 
 
 6. Run `./consumer.sh` to start reading messages we started sending to the `stock-trades` topic above. After a moment, you should see data streaming to your screen. If this step is successful, you can optionally stop the producer container and the consumer task, as we only need a little bit of data to test our S3 sync connector in the next steps.
 
