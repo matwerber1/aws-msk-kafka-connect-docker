@@ -6,7 +6,6 @@ packaged.yaml
 confluent/examples
 build/
 kafka_2.12*
-ssl/
 producer.sh
 consumer.sh
 credentials
