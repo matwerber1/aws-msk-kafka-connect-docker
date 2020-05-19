@@ -1,11 +1,18 @@
 # aws-msk-kafka-connect-docker
 
-This repository is a work in process and is tracking some of my early learning and tests of [Amazon Managed Streaming for Kafka (Amazon MSK)](https://aws.amazon.com/msk/), and [Confluent's Kafka Connect](https://docs.confluent.io/current/connect/index.html) to produce or consume data from the cluster. 
+This project demonstrates how to use [Apache Kafka Connect](https://kafka.apache.org/documentation/#connect) to send data to a topic on an [Amazon MSK](https://aws.amazon.com/msk/) cluster and also shows how to use Kafka Connect to sync data from that same topic to an Amazon S3 bucket. 
+
+A deep dive into Kafka and Kafka Connect is outside the scope of this project. Just know that Kafka Connect is a framework that lets you use **connectors** to either write data into Kafka or read data from Kafka and **sync** it to an external source. Since Amazon MSK is compatible with Kafka APIs, Kafka Connect will also work for Amazon MSK. 
+
+We will use Confluent's [Kafka Connect Datagen](https://www.confluent.io/hub/confluentinc/kafka-connect-datagen/) to produce dummy stock data and write it to a `stock-trades` topic in MSK. Their Datagen project is a a Kafka Connect worker with custom plugins to generate dummy data. Note - In production, one would use Kafka Connect with pre-written connectors (or custom-written connectors) to read from real data sources such as relational databases, Amazon S3 buckets, DynamoDB streams, etc.
+
+We will then use a separate Kafka Connect worker to read from our MSK cluster and write our stock data to Amazon S3. Rather than write our own S3 connector, we use Confluent's version ([confluentinc/cp-kafka-connect](https://hub.docker.com/r/confluentinc/cp-kafka-connect)) because it comes pre-packaged with their own [S3 Sync Connector](https://docs.confluent.io/current/connect/kafka-connect-s3/index.html) already written for us.
+
+Both our data producer and S3 sync instances of Kafka Connect will run as Docker containers. 
+
 # Status
 
-Not yet ready for prime time...
-
-The data generator container is producing data in a format that is not compatible with the S3 Sync Connector (which must be Avro). Either that, or I have some mistakes with the key/value converters or other config parameters. Not sure, still learning. 
+Draft complete... I think it works? :)
 
 # Pre-requisites
 
