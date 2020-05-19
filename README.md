@@ -47,6 +47,31 @@ To do this, you should:
 
 The steps above will store the access keys locally at `~/.aws/credentials`. When we later run our S3 Sync Docker container, we will mount this file within the container so that Kafka Connect can access the credentials.
 
+The IAM user for Kafka Connect needs a very basic set of IAM permissions to write to your Amazon S3 bucket: 
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "WriteToKafkaDemoBucket",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::YOUR_DEMO_BUCKET/*"
+            ]
+        }
+    ]
+}
+```
+
+## 4. Java 1.8 JDK
+
+You will need Java/JDK version >=1.8 to run Kafka Connect. You can install the open source [Amazon Corretto Java 8](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/amazon-linux-install.html) or another distribution of your choice. 
+
+
 # Deployment
 
 1. Clone this project:

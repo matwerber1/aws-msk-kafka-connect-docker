@@ -69,7 +69,7 @@ fi
 DIR=$(pwd)
 echo Starting Kafka Connect S3 Sync worker...
 docker run -it --rm \
-  -p $PRODUCER_PORT:$PRODUCER_PORT
+  -p $PRODUCER_PORT:$PRODUCER_PORT \
   --expose $PRODUCER_PORT \
   --env=host \
   -e CONNECT_BOOTSTRAP_SERVERS="$BROKERS" \
