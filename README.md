@@ -93,12 +93,11 @@ You will need Java/JDK version >=1.8 to run Kafka Connect. You can install the o
 
 3. OPTIONAL - required if you chose to use SSL by settiing `USE_SSL=1`. If so, you will need to copy your `cacerts` from your local Java installation to the `./ssl/` project directory so that we can provide it to our Kafka Connect docker container at runtime. [Follow these instructions to do so](https://docs.aws.amazon.com/msk/latest/developerguide/msk-working-with-encryption.html). You should just need to run a simple copy command like the one below (your path may vary based on which Java version you have and where it is installed):
 
-
-    **NOTE** - I've included my client.truststore.jks file in this GitHub project (from Amazon Correto Java 1.8, on an EC2 Cloud9 instance). I don't know enough about this process to know whether or not you can use this file or whether you truly need to copy / create your own. Try it and see what happens?
-
     ```sh
     cp /usr/lib/jvm/java-1.7.0-openjdk.x86_64/jre/lib/security/cacerts ./ssl/client.truststore.jks
     ```
+
+    **NOTE** - I've already included my client.truststore.jks file in this GitHub project (from Amazon Correto Java 1.8, on an EC2 Cloud9 instance).I'm not sure whether you can use this file as-is or whether you truly need to copy your own like the command above. Try it and see what happens?
 
 4. In a new terminal, run `./create-producer.sh` to start a local Kakfa Connect demo container to send data to your cluster. Once the container is running, it needs to complete a few tasks before it is ready. Leave this task running in its own terminal. When you see a message like below, it should be ready: 
     
