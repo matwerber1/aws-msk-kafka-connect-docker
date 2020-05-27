@@ -72,6 +72,22 @@ The IAM user for Kafka Connect needs a very basic set of IAM permissions to writ
 You will need Java/JDK version >=1.8 to run Kafka Connect. You can install the open source [Amazon Corretto Java 8](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/amazon-linux-install.html) or another distribution of your choice. 
 
 
+# Note on Cloud9 Free Space
+
+If you use Cloud9, by default it comes with 10 GB of disk space. This is not enough to download / run all of the Docker images and other assets needed for this demo. 
+
+An example error looks like: 
+
+```
+docker: write /var/lib/docker/tmp/GetImageBlob796904847: no space left on device.
+```
+
+If you get an error like that, you can stop your running containers and then execute the command below to free space:
+
+```
+docker system prune --all
+```
+
 # Deployment
 
 1. Clone this project:
