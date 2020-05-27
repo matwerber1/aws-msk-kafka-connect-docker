@@ -7,6 +7,6 @@ confluent/examples
 build/
 kafka_2.12*
 producer.sh
-consumer.sh
+run-consumer.sh
 credentials
 my-global.sh

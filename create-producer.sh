@@ -11,6 +11,14 @@ echo Loading config...
 # Only edit if you want to customize things:
 #-------------------------------------------------------------------------------
 
+# Install jq, needed for parsing responses from AWS CLI to extract broker info...
+echo "Installing jq..."
+sudo yum install jq -y
+
+echo "Installing Java 1.8 (needed for the version of Kafka that we use)..."
+sudo yum install java-1.8.0 java-1.8.0-openjdk-devel -y
+sudo yum remove java-1.7.0-openjdk -y
+
 # Get Cluster Info
 echo Getting Amazon MSK broker and ZooKeeper addresses...
 ZOOKEEPER_STRING=$(aws kafka describe-cluster --cluster-arn $CLUSTER_ARN | jq ' .ClusterInfo.ZookeeperConnectString ' --raw-output)
@@ -23,7 +31,7 @@ CURRENT_DIR=$(pwd)
 KAFKA_DIR=kafka_2.12-2.2.1
 if [ ! -d $KAFKA_DIR ]; then
   echo Downloading Kafka...
-  get https://archive.apache.org/dist/kafka/2.2.1/kafka_2.12-2.2.1.tgz
+  wget https://archive.apache.org/dist/kafka/2.2.1/kafka_2.12-2.2.1.tgz
   tar -xzf kafka_2.12-2.2.1.tgz
 else
   echo Kafka already downloaded...
@@ -38,16 +46,6 @@ $KAFKA_DIR/bin/kafka-topics.sh --create \
   --partitions 1 \
   --topic stock-trades
 
-# Generate a 'consumer.sh' script we can later run to view data as it
-# is being produced in the terminal (allows us to make sure producer is working):
-echo "Generating run-consumer.sh which you can later use to read data from our test topic..."
-cat <<EOT > ./run-consumer.sh
-$KAFKA_DIR/bin/kafka-console-consumer.sh \
-  --bootstrap-server $BROKERS \
-  --topic stock-trades --from-beginning
-EOT
-chmod 777 $CURRENT_DIR/run-consumer.sh
-
 # Configure appropriate settings based on whether you want to use SSL:
 if [ $USE_SSL -eq 1 ]
 then
@@ -59,6 +57,17 @@ else
   BROKERS=$PLAINTEXT_BROKERS
   SECURITY_PROTOCOL=PLAINTEXT
 fi
+
+# Generate a 'consumer.sh' script we can later run to view data as it
+# is being produced in the terminal (allows us to make sure producer is working):
+echo "Generating run-consumer.sh which you can later use to read data from our test topic..."
+cat <<EOT > ./run-consumer.sh
+$KAFKA_DIR/bin/kafka-console-consumer.sh \
+  --bootstrap-server $BROKERS \
+  --topic stock-trades --from-beginning
+EOT
+chmod 777 $CURRENT_DIR/run-consumer.sh
+
 
 # Run our Kafka Connect demo container. Note - it takes a minute or two to finish setting up. 
 # Once its done, it listens on a local port and we need to curl a command to the listener to
