@@ -19,6 +19,8 @@ Draft complete... I think it works? :)
 ## 1. MSK Cluster
 You need to create an [Amazon Managed Streaming for Kafka (MSK)](https://aws.amazon.com/msk/) cluster in one of your AWS VPCs. 
 
+If you don't already have an MSK cluster, this project includes an optional CloudFormation template you can deploy to create a VPC with a small MSK cluster running across three AZs.
+
 While you technically could create the cluster in a public subnet and connect to it over the internet, I would always advise to launch resources in a private subnet when possible and then connect to them from either a bastion host, another EC2 instance, an [Amazon Cloud9 instance](https://aws.amazon.com/cloud9/) (easiest option, in my opinion), a VPN connection, or similar approach. 
 
 When creating your MSK cluster, **create a three-node cluster**. MSK will allow you to create a two-node cluster, however, we will use a docker image of the kafka-connect-datagen ()[cnfldemos/kafka-connect-datagen](https://github.com/confluentinc/kafka-connect-datagen)), and this demo data connector requires 3+ nodes. You can use the smallest available node type, currently a **kafka.t3.small**, for your brokers. 
@@ -71,22 +73,11 @@ The IAM user for Kafka Connect needs a very basic set of IAM permissions to writ
 
 You will need Java/JDK version >=1.8 to run Kafka Connect. You can install the open source [Amazon Corretto Java 8](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/amazon-linux-install.html) or another distribution of your choice. 
 
+## Connectivity to Private Resources in your VPC
 
-# Note on Cloud9 Free Space
+You need to run your Kafka Connect Docker containers from a machine that has connectivity to your MSK cluster. If you follow recommendations in this guide, your MSK cluster would be in a private subnet, meaning you would either need to connect to your VPC (e.g. using VPN) if using an external/personal machine or you would directly run the demo project / containers from an EC2 instance running in your VPC.
 
-If you use Cloud9, by default it comes with 10 GB of disk space. This is not enough to download / run all of the Docker images and other assets needed for this demo. 
-
-An example error looks like: 
-
-```
-docker: write /var/lib/docker/tmp/GetImageBlob796904847: no space left on device.
-```
-
-If you get an error like that, you can stop your running containers and then execute the command below to free space:
-
-```
-docker system prune --all
-```
+For simplicity, I recommend launching a Cloud9 instance in your VPC. If you use the optional included CloudFormation template in this project, we will create a Cloud9 instance and MSK cluster for you with security groups that allow the two to communicate.
 
 # Deployment
 
@@ -95,6 +86,13 @@ docker system prune --all
     ```
     git clone https://github.com/matwerber1/aws-msk-kafka-connect-docker.git
     ```
+
+2. OPTIONAL - if you don't already have an MSK cluster, you can deploy the included Cloudformation template, `cloudformation.yaml` to deploy an MSK cluster (and Cloud9 instance) in private subnets in a new VPC:
+
+    ```
+    aws cloudformation deploy --template-file cloudformation.yaml --stack-name msk-kafka-connect-demo
+    ```
+    
 
 2. Edit `config/global.sh` to specify your MSK cluster ARN, S3 bucket name and region, and whether or not you will use SSL to communicate with your brokers:
 
