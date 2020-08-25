@@ -10,9 +10,6 @@ We will then use a separate Kafka Connect worker to read from our MSK cluster an
 
 Both our data producer and S3 sync instances of Kafka Connect will run as Docker containers. 
 
-# Status
-
-Draft complete... I think it works? :)
 
 # Pre-requisites
 

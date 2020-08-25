@@ -10,3 +10,4 @@ producer.sh
 run-consumer.sh
 credentials
 my-global.sh
+sink-connector.config
