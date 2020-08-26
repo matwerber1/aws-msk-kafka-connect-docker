@@ -5,7 +5,7 @@ Parameters:
   ClassB:
     Description: 'Class B of VPC (10.XXX.0.0/16)'
     Type: Number
-    Default: 0
+    Default: 199
     ConstraintDescription: 'Must be in the range [0-255]'
     MinValue: 0
     MaxValue: 255
