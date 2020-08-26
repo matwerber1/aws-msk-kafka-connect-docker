@@ -11,14 +11,14 @@ echo Loading config...
 # Only edit if you want to customize things:
 #-------------------------------------------------------------------------------
 
-# Get MSK cluster ARN from CloudFormation stack outputs:
-CLUSTER_ARN=$(aws cloudformation describe-stacks --region $CLUSTER_REGION --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='MskClusterArn'].OutputValue" --output text)
-AWS_REGION=$(aws cloudformation describe-stacks --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='StackRegion'].OutputValue" --output text)
-S3_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='BucketName'].OutputValue" --output text)
-
 # Install jq, needed for parsing responses from AWS CLI to extract broker info...
 echo "Installing jq..."
 sudo yum install jq -y
+
+# Get MSK cluster ARN from CloudFormation stack outputs:
+CLUSTER_ARN=$(aws cloudformation describe-stacks --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='MskClusterArn'].OutputValue" --output text)
+AWS_REGION=$(aws cloudformation describe-stacks --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='StackRegion'].OutputValue" --output text)
+S3_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='BucketName'].OutputValue" --output text)
 
 echo "Installing Java 1.8 (needed for the version of Kafka that we use)..."
 sudo yum install java-1.8.0 java-1.8.0-openjdk-devel -y
@@ -52,11 +52,11 @@ $KAFKA_DIR/bin/kafka-topics.sh --create \
 if [ $USE_SSL -eq 1 ]
 then
   echo Based on global config, TLS brokers will be used...
-  BROKERS=$(aws kafka get-bootstrap-brokers --region $CLUSTER_REGION --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerStringTls' --raw-output)
+  BROKERS=$(aws kafka get-bootstrap-brokers --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerStringTls' --raw-output)
   SECURITY_PROTOCOL=SSL
 else
   echo Based on global config, plaintext brokers will be used...
-  BROKERS=$(aws kafka get-bootstrap-brokers --region $CLUSTER_REGION --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerString' --raw-output)
+  BROKERS=$(aws kafka get-bootstrap-brokers --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerString' --raw-output)
   SECURITY_PROTOCOL=PLAINTEXT
 fi
 

@@ -24,20 +24,21 @@ Both our data producer and S3 sink instances of Kafka Connect will run as Docker
 
 3. Once deployed, Navigate to the [Amazon Cloud9 console](https://us-west-2.console.aws.amazon.com/cloud9/home?).
 
-4. Within Cloud9, clone this project and move into the project directory:
+4. Within Cloud9, clone this project and move into the project's `src/` directory:
 
     ```
     git clone https://github.com/matwerber1/aws-msk-kafka-connect-docker.git
-    cd aws-msk-kafka-connect-docker
+
+    cd aws-msk-kafka-connect-docker/src
     ```
 
-5. In a new Cloud9 terminal, run `./src/create-sink-connect.sh` to start a local Kakfa Connect demo container to send data to your cluster. Once the container is running, it needs to complete a few tasks before it is ready. Leave this task running in its own terminal. When you see a message like below, it should be ready: 
+5. In a new Cloud9 terminal, run `./create-source-connector.sh` to start a local Kakfa Connect demo container to send data to your cluster. Once the container is running, it needs to complete a few tasks before it is ready. Leave this task running in its own terminal. When you see a message like below, it should be ready: 
     
     ```
     [2020-05-15 21:13:33,884] INFO [Worker clientId=connect-1, groupId=stock-trades-group] Finished starting connectors and tasks (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
     ```
 
-5. The step above starts our Kafka Connect data producer, but no data is being produced yet. When Kafka Connect starts, it listens on a local REST interface for commands, such as starting or stopping a task. To start our data generation, run `./invoke_producer.sh`, which will curl a simple API command to your container and tell it to start sending messages to the `stock-trades` topic in your MSK cluster. 
+5. The step above starts our Kafka Connect data producer, but no data is being produced yet. When Kafka Connect starts, it listens on a local REST interface for commands, such as starting or stopping a task. To start our data generation, open a new Cloud9 terminal window and run `./start-source-connector.sh`, which will curl a simple API command to your container and tell it to start sending messages to the `stock-trades` topic in your MSK cluster. 
 
 6. Run `./consumer.sh` to start reading messages we started sending to the `stock-trades` topic above. After a moment, you should see data streaming to your screen. If this step is successful, you can optionally stop the producer container and the consumer task, as we only need a little bit of data to test our S3 sync connector in the next steps.
 

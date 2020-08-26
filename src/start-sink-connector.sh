@@ -7,8 +7,8 @@
 curl -X POST \
   -H "Content-Type: application/json" \
   --data @config/s3-sync.config \
-  http://localhost:$SYNC_PORT/connectors
+  http://localhost:$KAFKA_CONNECT_SINK_PORT/connectors
   
 
 # If you need to delete a task, you can use this command: 
-#curl -X DELETE localhost:$SYNC_PORT/connectors/s3-sink-docker
+#curl -X DELETE localhost:$KAFKA_CONNECT_SINK_PORT/connectors/s3-sink-docker

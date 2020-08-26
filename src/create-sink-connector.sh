@@ -5,11 +5,15 @@
 #-------------------------------------------------------------------------------
 
 echo Loading config...
-. config/global-global.sh
+. config/global-config.sh
 
 #-------------------------------------------------------------------------------
 # Only edit if you want to further customize:
 #-------------------------------------------------------------------------------
+
+# Install jq, needed for parsing responses from AWS CLI to extract broker info...
+echo "Installing jq..."
+sudo yum install jq -y
 
 # Get MSK cluster ARN from CloudFormation stack outputs:
 CLUSTER_ARN=$(aws cloudformation describe-stacks --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='MskClusterArn'].OutputValue" --output text)

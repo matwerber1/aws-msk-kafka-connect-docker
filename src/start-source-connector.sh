@@ -13,4 +13,4 @@ curl \
   -X POST \
   -H "Content-Type: application/json" \
   --data @config/source-connector.config \
-  http://localhost:$PRODUCER_PORT/connectors
+  http://localhost:$KAFKA_CONNECT_SOURCE_PORT/connectors
