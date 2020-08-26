@@ -6,7 +6,7 @@
 # Invoke S3 Sync container to start sync process from MSK to S3:
 curl -X POST \
   -H "Content-Type: application/json" \
-  --data @config/s3-sync.config \
+  --data @config/sink-connnector.config \
   http://localhost:$KAFKA_CONNECT_SINK_PORT/connectors
   
 
