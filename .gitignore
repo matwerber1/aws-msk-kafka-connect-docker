@@ -7,7 +7,7 @@ confluent/examples
 build/
 kafka_2.12*
 producer.sh
-run-consumer.sh
+kafka-console-consumer.sh
 credentials
 my-global.sh
 sink-connector.config

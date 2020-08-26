@@ -13,6 +13,8 @@ echo Loading config...
 
 # Get MSK cluster ARN from CloudFormation stack outputs:
 CLUSTER_ARN=$(aws cloudformation describe-stacks --region $CLUSTER_REGION --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='MskClusterArn'].OutputValue" --output text)
+AWS_REGION=$(aws cloudformation describe-stacks --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='StackRegion'].OutputValue" --output text)
+S3_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='BucketName'].OutputValue" --output text)
 
 # Install jq, needed for parsing responses from AWS CLI to extract broker info...
 echo "Installing jq..."
@@ -60,34 +62,36 @@ fi
 
 # Generate a test script that can read directly from our MSK topic to make sure
 # that our Kafka Connect Source Connector is publishing data:
-echo "Generating run-consumer.sh which you can later use to read data directly from our test topic in MSK..."
-cat <<EOT > ./run-consumer.sh
+echo "Generating kafka-console-consumer.sh which you can later use to read data directly from our test topic in MSK..."
+cat <<EOT > ./kafka-console-consumer.sh
 $KAFKA_DIR/bin/kafka-console-consumer.sh \
   --bootstrap-server $BROKERS \
   --topic stock-trades --from-beginning
 EOT
-chmod 777 $CURRENT_DIR/run-consumer.sh
+chmod 777 $CURRENT_DIR/kafka-console-consumer.sh
 
 
 # Run our Kafka Connect demo container. Note - it takes a minute or two to finish setting up. 
 # Once its done, it listens on a local port and we need to curl a command to the listener to
 # tell it to start producing our demo data:
 DIR=$(pwd)
-echo Starting Kafka Connect S3 Sync worker...
+PORT=$KAFKA_CONNECT_SOURCE_PORT
+TOPIC_PREFIX=$KAFKA_CONNECT_SOURCE_TOPIC_PREFIX
+echo Starting Kafka Connect source connector...
 docker run -it --rm \
-  -p $PRODUCER_PORT:$PRODUCER_PORT \
-  --expose $PRODUCER_PORT \
+  -p $PORT:$PORT \
+  --expose $PORT \
   --env=host \
   -e CONNECT_BOOTSTRAP_SERVERS="$BROKERS" \
   -e CONNECT_REST_HOST_NAME="0.0.0.0" \
-  -e CONNECT_REST_PORT="$PRODUCER_PORT" \
+  -e CONNECT_REST_PORT="$PORT" \
   -e CONNECT_REST_ADVERTISED_HOST_NAME="localhost" \
   -e CONNECT_REST_ADVERTISED_LISTENER="http" \
-  -e CONNECT_REST_ADVERTISED_PORT="$PRODUCER_PORT" \
-  -e CONNECT_GROUP_ID="$PRODUCER_TOPIC_PREFIX-group" \
-  -e CONNECT_CONFIG_STORAGE_TOPIC="$PRODUCER_TOPIC_PREFIX-config" \
-  -e CONNECT_OFFSET_STORAGE_TOPIC="$PRODUCER_TOPIC_PREFIX-offsets" \
-  -e CONNECT_STATUS_STORAGE_TOPIC="$PRODUCER_TOPIC_PREFIX-status" \
+  -e CONNECT_REST_ADVERTISED_PORT="$PORT" \
+  -e CONNECT_GROUP_ID="$TOPIC_PREFIX-group" \
+  -e CONNECT_CONFIG_STORAGE_TOPIC="$TOPIC_PREFIX-config" \
+  -e CONNECT_OFFSET_STORAGE_TOPIC="$TOPIC_PREFIX-offsets" \
+  -e CONNECT_STATUS_STORAGE_TOPIC="$TOPIC_PREFIX-status" \
   -e CONNECT_KEY_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
   -e CONNECT_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
   -e CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE="false" \

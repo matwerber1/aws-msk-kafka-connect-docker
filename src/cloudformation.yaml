@@ -78,6 +78,14 @@ Resources:
       CidrIp: !GetAtt VPC.CidrBlock
   
   #-----------------------------------------------------------
+  # S3 Bucket
+  #-----------------------------------------------------------
+  
+  # We will write data from our MSK cluster to this demo bucket using Kafka Connect:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+
+  #-----------------------------------------------------------
   # NETWORKING COMPONENTS
   #-----------------------------------------------------------
 
@@ -493,10 +501,18 @@ Outputs:
   StackName:
     Description: 'Stack name.'
     Value: !Sub '${AWS::StackName}'
+  
+  StackRegion:
+    Description: 'Region that this stack is launched in'
+    Value: !Sub '${AWS::Region}'
 
   MskClusterArn:
     Description: 'ARN of the MSK cluster'
     Value: !Ref MskCluster
+
+  BucketName: 
+    Description: 'S3 Bucket that we will MSK topic messages to using Kafka Connect'
+    Value: !Ref S3Bucket
 
   AZs:
     Description: 'AZs'

@@ -2,41 +2,19 @@
 
 This project demonstrates how to use [Apache Kafka Connect](https://kafka.apache.org/documentation/#connect) to send data to a topic on an [Amazon MSK](https://aws.amazon.com/msk/) cluster and also shows how to use Kafka Connect to sync data from that same topic to an Amazon S3 bucket. 
 
-A deep dive into Kafka and Kafka Connect is outside the scope of this project. Just know that Kafka Connect is a framework that lets you use **connectors** to either write data into Kafka or read data from Kafka and **sync** it to an external source. Since Amazon MSK is compatible with Kafka APIs, Kafka Connect will also work for Amazon MSK. 
+A deep dive into Kafka and Kafka Connect is outside the scope of this project. Just know that Kafka Connect is a framework that lets you use **connectors** to either write data into Kafka or read data from Kafka and **sink** it to an external source. Since Amazon MSK is compatible with Kafka APIs, Kafka Connect will also work for Amazon MSK. 
 
 We will use Confluent's [Kafka Connect Datagen](https://www.confluent.io/hub/confluentinc/kafka-connect-datagen/) to produce dummy stock data and write it to a `stock-trades` topic in MSK. Their Datagen project is a a Kafka Connect worker with custom plugins to generate dummy data. Note - In production, one would use Kafka Connect with pre-written connectors (or custom-written connectors) to read from real data sources such as relational databases, Amazon S3 buckets, DynamoDB streams, etc.
 
-We will then use a separate Kafka Connect worker to read from our MSK cluster and write our stock data to Amazon S3. Rather than write our own S3 connector, we use Confluent's version ([confluentinc/cp-kafka-connect](https://hub.docker.com/r/confluentinc/cp-kafka-connect)) because it comes pre-packaged with their own [S3 Sync Connector](https://docs.confluent.io/current/connect/kafka-connect-s3/index.html) already written for us.
+We will then use a separate Kafka Connect worker to read from our MSK cluster and write our stock data to Amazon S3. Rather than write our own S3 connector, we use Confluent's version ([confluentinc/cp-kafka-connect](https://hub.docker.com/r/confluentinc/cp-kafka-connect)) because it comes pre-packaged with their own [S3 Sink Connector](https://docs.confluent.io/current/connect/kafka-connect-s3/index.html) already written for us.
 
-Both our data producer and S3 sync instances of Kafka Connect will run as Docker containers. 
+Both our data producer and S3 sink instances of Kafka Connect will run as Docker containers. 
 
 
-# Pre-requisites
-
-## 1. MSK Cluster
-You need to create an [Amazon Managed Streaming for Kafka (MSK)](https://aws.amazon.com/msk/) cluster in one of your AWS VPCs. 
-
-If you don't already have an MSK cluster, this project includes an optional CloudFormation template you can deploy to create a VPC with a small MSK cluster running across three AZs.
-
-While you technically could create the cluster in a public subnet and connect to it over the internet, I would always advise to launch resources in a private subnet when possible and then connect to them from either a bastion host, another EC2 instance, an [Amazon Cloud9 instance](https://aws.amazon.com/cloud9/) (easiest option, in my opinion), a VPN connection, or similar approach. 
-
-When creating your MSK cluster, **create a three-node cluster**. MSK will allow you to create a two-node cluster, however, we will use a docker image of the kafka-connect-datagen ()[cnfldemos/kafka-connect-datagen](https://github.com/confluentinc/kafka-connect-datagen)), and this demo data connector requires 3+ nodes. You can use the smallest available node type, currently a **kafka.t3.small**, for your brokers. 
-
-When creating your MSK cluster, you can choose from one of the three following encryption in-transit options between brokers and clients: 
-
-* Only TLS encrypted traffic allowed
-* Both TLS encrypted and plaintext traffic allowed
-* Only plaintext traffic allowed
-
-Both TLS and plaintext are supported by this project, but TLS will require an extra step (documented later).  
-
-## 2. Amazon S3 Bucket
-
-You should create a new Amazon S3 bucket; we will write our test data from MSK to this bucket using Kafka Connect. 
 
 ## 3. AWS CLI / Credentials
 
-We will create an instance of Kafka Connect that uses the [Confluent S3 Sync connector](https://docs.confluent.io/current/connect/kafka-connect-s3/index.html) to read data from our test topic and write it to Amazon S3. Since we're runnning the S3 sync connenctor as a Docker container, we need to pass in AWS credentials to the container that allow it to write to Amazon S3. 
+We will create an instance of Kafka Connect that uses the [Confluent S3 sink connector](https://docs.confluent.io/current/connect/kafka-connect-s3/index.html) to read data from our test topic and write it to Amazon S3. Since we're runnning the S3 sink connenctor as a Docker container, we need to pass in AWS credentials to the container that allow it to write to Amazon S3. 
 
 To do this, you should:
 
@@ -44,7 +22,7 @@ To do this, you should:
 2. Create AWS access keys for the user
 3. Run `aws configure` from the machine that you're running this project on, and enter the user's access credentials
 
-The steps above will store the access keys locally at `~/.aws/credentials`. When we later run our S3 Sync Docker container, we will mount this file within the container so that Kafka Connect can access the credentials.
+The steps above will store the access keys locally at `~/.aws/credentials`. When we later run our S3 sink Docker container, we will mount this file within the container so that Kafka Connect can access the credentials.
 
 The IAM user for Kafka Connect needs a very basic set of IAM permissions to write to your Amazon S3 bucket: 
 

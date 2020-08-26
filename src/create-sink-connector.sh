@@ -12,17 +12,19 @@ echo Loading config...
 #-------------------------------------------------------------------------------
 
 # Get MSK cluster ARN from CloudFormation stack outputs:
-CLUSTER_ARN=$(aws cloudformation describe-stacks --region $CLUSTER_REGION --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='MskClusterArn'].OutputValue" --output text)
+CLUSTER_ARN=$(aws cloudformation describe-stacks --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='MskClusterArn'].OutputValue" --output text)
+AWS_REGION=$(aws cloudformation describe-stacks --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='StackRegion'].OutputValue" --output text)
+S3_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name $CLOUDFORMATION_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='BucketName'].OutputValue" --output text)
 
 # Configure appropriate settings based on whether you want to use SSL:
 if [ $USE_SSL -eq 1 ]
 then
   echo Based on global config, TLS brokers will be used...
-  BROKERS=$(aws kafka get-bootstrap-brokers --region $CLUSTER_REGION --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerStringTls' --raw-output)
+  BROKERS=$(aws kafka get-bootstrap-brokers --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerStringTls' --raw-output)
   SECURITY_PROTOCOL=SSL
 else
   echo Based on global config, plaintext brokers will be used...
-  BROKERS=$(aws kafka get-bootstrap-brokers --region $CLUSTER_REGION --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerString' --raw-output)
+  BROKERS=$(aws kafka get-bootstrap-brokers --cluster-arn $CLUSTER_ARN | jq ' .BootstrapBrokerString' --raw-output)
   SECURITY_PROTOCOL=PLAINTEXT
 fi
 
@@ -34,7 +36,7 @@ cat <<EOT > config/sink-connector.config
   "config": {
     "connector.class": "io.confluent.connect.s3.S3SinkConnector",
     "topics": "stock-trades",
-    "s3.region": "$S3_REGION",
+    "s3.region": "$AWS_REGION",
     "s3.bucket.name": "$S3_BUCKET_NAME",
     "s3.part.size": 5242880,
     "flush.size": 10000, 
@@ -55,22 +57,24 @@ EOT
 # Once its done, it listens on a local port and we need to curl a command to the listener to
 # tell it to start producing our demo data:
 DIR=$(pwd)
-echo Starting Kafka Connect S3 Sync worker...
+PORT=$KAFKA_CONNECT_SINK_PORT
+TOPIC_PREFIX=$KAFKA_CONNECT_SINK_TOPIC_PREFIX
+echo Starting Kafka Connect sink connector...
 docker run -it --rm \
-  -p $SYNC_PORT:$SYNC_PORT \
-  --expose $SYNC_PORT \
+  -p $PORT:$PORT \
+  --expose $PORT \
   --env=host \
   -e CONNECT_SECURITY_PROTOCOL=$SECURITY_PROTOCOL \
   -e CONNECT_BOOTSTRAP_SERVERS="$BROKERS" \
   -e CONNECT_REST_HOST_NAME="0.0.0.0" \
-  -e CONNECT_REST_PORT="$SYNC_PORT" \
+  -e CONNECT_REST_PORT="$PORT" \
   -e CONNECT_REST_ADVERTISED_HOST_NAME="localhost" \
   -e CONNECT_REST_ADVERTISED_LISTENER="http" \
-  -e CONNECT_REST_ADVERTISED_PORT="$SYNC_PORT" \
-  -e CONNECT_GROUP_ID="$SYNC_TOPIC_PREFIX-group" \
-  -e CONNECT_CONFIG_STORAGE_TOPIC="$SYNC_TOPIC_PREFIX-config" \
-  -e CONNECT_OFFSET_STORAGE_TOPIC="$SYNC_TOPIC_PREFIX-offsets" \
-  -e CONNECT_STATUS_STORAGE_TOPIC="$SYNC_TOPIC_PREFIX-status" \
+  -e CONNECT_REST_ADVERTISED_PORT="$PORT" \
+  -e CONNECT_GROUP_ID="$TOPIC_PREFIX-group" \
+  -e CONNECT_CONFIG_STORAGE_TOPIC="$TOPIC_PREFIX-config" \
+  -e CONNECT_OFFSET_STORAGE_TOPIC="$TOPIC_PREFIX-offsets" \
+  -e CONNECT_STATUS_STORAGE_TOPIC="$TOPIC_PREFIX-status" \
   -e CONNECT_KEY_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
   -e CONNECT_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
   -e CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE="false" \
