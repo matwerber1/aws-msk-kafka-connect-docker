@@ -10,6 +10,15 @@ We will then use a separate Kafka Connect worker to read from our MSK cluster an
 
 Both our data producer and S3 sink instances of Kafka Connect will run as Docker containers. 
 
+# Architecture
+
+This project deploys the following into your AWS account: 
+
+1. Amazon VPC with three public and private subnets across three availability zones
+2. Amazon Managed Streaming for Kafka (Amazon MSK) Cluster
+3. Amazon S3 bucket
+4. Amazon Cloud9 environment
+
 # Deployment
 
 1. Download [`cloudformation.yaml`](https://github.com/matwerber1/aws-msk-kafka-connect-docker/raw/master/src/cloudformation.yaml) from this github project, then [navigate to CloudFormation](https://us-west-2.console.aws.amazon.com/cloudformation/home?#/stacks/create/template), click **upload a template file**, upload the template, and click **Next**.
